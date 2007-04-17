@@ -4,7 +4,7 @@
 
 Name:           tuxguitar
 Version:        0.9.1
-Release:        %mkrel 4
+Release:        %mkrel 5
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -19,11 +19,11 @@ Patch1:         %{name}-no-java-1.5.patch
 Requires:       aoss
 Requires:       java
 Requires:       jpackage-utils >= 0:1.6
-Requires:       itext2
+Requires:       itext
 Requires:       libswt3-gtk2
 BuildRequires:  ant
 BuildRequires:  jpackage-utils >= 0:1.6
-BuildRequires:  itext2
+BuildRequires:  itext
 BuildRequires:  libswt3-gtk2
 %if %{gcj_support}
 Requires(post): java-gcj-compat
@@ -80,7 +80,7 @@ export OPT_JAR_LIST=:
   -Dbuild.manifest.classpath= \
   -Dlib.swt.jni=%{_libdir} \
   -Dlib.swt.jar=$(build-classpath swt-gtk-3.2) \
-  -Dlib.itext.jar=$(build-classpath itext2)
+  -Dlib.itext.jar=$(build-classpath itext)
 
 %{__mkdir_p} api
 pushd src
