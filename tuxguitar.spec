@@ -4,7 +4,7 @@
 
 Name:           tuxguitar
 Version:        0.9.1
-Release:        %mkrel 5
+Release:        %mkrel 6
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -14,13 +14,12 @@ Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/TuxGuitar-
 Source1:        %{name}-script
 Source2:        %{name}.desktop
 Source3:        %{name}.applications
-Patch0:         %{name}-no-javax-print.patch
-Patch1:         %{name}-no-java-1.5.patch
+Patch0:         %{name}-0.9.1-javax.sound.midi.MidiSystem-gcj.patch
 Requires:       aoss
 Requires:       java
 Requires:       jpackage-utils >= 0:1.6
 Requires:       itext
-Requires:       libswt3-gtk2
+Requires:       libswt3-gtk2 = 1:3.3.0
 BuildRequires:  ant
 BuildRequires:  jpackage-utils >= 0:1.6
 BuildRequires:  itext
@@ -35,8 +34,6 @@ BuildArch:      noarch
 %endif
 Provides:       %{rname} = %{epoch}:%{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-#Vendor:        JPackage Project
-#Distribution:  JPackage
 BuildRequires:  desktop-file-utils
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
@@ -68,8 +65,7 @@ Javadoc for %{name}.
 
 %prep
 %setup -q -n %{rname}-%{version}-src
-%patch0 -p1 -b .no-javax-print
-%patch1 -p1 -b .no-java-1.5
+%patch0 -p1
 %{__perl} -pi -e 's|<javac|<javac nowarn="true"|g' build.xml
 %{__perl} -pi -e 's|<attribute name="Class-Path".*||g' build.xml
 
@@ -79,7 +75,7 @@ export OPT_JAR_LIST=:
 %{ant} \
   -Dbuild.manifest.classpath= \
   -Dlib.swt.jni=%{_libdir} \
-  -Dlib.swt.jar=$(build-classpath swt-gtk-3.2) \
+  -Dlib.swt.jar=$(build-classpath swt-gtk-3.3) \
   -Dlib.itext.jar=$(build-classpath itext)
 
 %{__mkdir_p} api
@@ -180,5 +176,3 @@ fi
 %defattr(0644,root,root,0755)
 %doc %{_javadocdir}/%{name}-%{version}
 %ghost %doc %{_javadocdir}/%{name}
-
-
