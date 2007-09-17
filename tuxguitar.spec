@@ -4,7 +4,7 @@
 
 Name:           tuxguitar
 Version:        0.9.1
-Release:        %mkrel 8
+Release:        %mkrel 9
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -14,7 +14,6 @@ Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/TuxGuitar-
 Source1:        %{name}-script
 Source2:        %{name}.desktop
 Source3:        %{name}.applications
-Patch0:         %{name}-0.9.1-javax.sound.midi.MidiSystem-gcj.patch
 Requires:       aoss
 Requires:       java
 Requires:       jpackage-utils >= 0:1.6
@@ -30,6 +29,7 @@ BuildRequires:  java-gcj-compat-devel
 BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
+BuildRequires:  java-devel-icedtea
 Provides:       %{rname} = %{epoch}:%{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:  desktop-file-utils
@@ -63,14 +63,14 @@ Javadoc for %{name}.
 
 %prep
 %setup -q -n %{rname}-%{version}-src
-%patch0 -p1
 %{__perl} -pi -e 's|<javac|<javac nowarn="true"|g' build.xml
 %{__perl} -pi -e 's|<attribute name="Class-Path".*||g' build.xml
 
 %build
 export CLASSPATH=
 export OPT_JAR_LIST=:
-%{ant} \
+export JAVA_HOME=%{_jvmdir}/java-icedtea
+ant \
   -Dbuild.manifest.classpath= \
   -Dlib.swt.jni=%{_libdir} \
   -Dlib.swt.jar=$(build-classpath swt-gtk-3.3) \
