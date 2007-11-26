@@ -4,7 +4,7 @@
 
 Name:           tuxguitar
 Version:        0.9.1
-Release:        %mkrel 9
+Release:        %mkrel 10
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -15,12 +15,16 @@ Source1:        %{name}-script
 Source2:        %{name}.desktop
 Source3:        %{name}.applications
 Requires:       aoss
+Requires(post): desktop-file-utils
+Requires(postun): desktop-file-utils
 Requires:       java
-Requires:       jpackage-utils >= 0:1.6
+Requires:       jpackage-utils
 Requires:       itext
-Requires:       libswt3-gtk2 = 1:3.3.0
+Requires:       libswt3-gtk2
 BuildRequires:  ant
-BuildRequires:  jpackage-utils >= 0:1.6
+BuildRequires:  desktop-file-utils
+BuildRequires:  java-devel-icedtea
+BuildRequires:  jpackage-utils
 BuildRequires:  itext
 BuildRequires:  libswt3-gtk2
 %if %{gcj_support}
@@ -29,12 +33,8 @@ BuildRequires:  java-gcj-compat-devel
 BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
-BuildRequires:  java-devel-icedtea
 Provides:       %{rname} = %{epoch}:%{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires:  desktop-file-utils
-Requires(post): desktop-file-utils
-Requires(postun): desktop-file-utils
 
 %description
 TuxGuitar is a multitrack guitar tablature editor and player written
@@ -73,7 +73,7 @@ export JAVA_HOME=%{_jvmdir}/java-icedtea
 ant \
   -Dbuild.manifest.classpath= \
   -Dlib.swt.jni=%{_libdir} \
-  -Dlib.swt.jar=$(build-classpath swt-gtk-3.3) \
+  -Dlib.swt.jar=$(build-classpath swt-gtk) \
   -Dlib.itext.jar=$(build-classpath itext)
 
 %{__mkdir_p} api
