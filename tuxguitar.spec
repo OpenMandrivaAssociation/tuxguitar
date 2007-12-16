@@ -4,7 +4,7 @@
 
 Name:           tuxguitar
 Version:        0.9.1
-Release:        %mkrel 10
+Release:        %mkrel 11
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -24,7 +24,7 @@ Requires:       libswt3-gtk2
 BuildRequires:  ant
 BuildRequires:  desktop-file-utils
 BuildRequires:  java-devel-icedtea
-BuildRequires:  jpackage-utils
+BuildRequires:  java-rpmbuild
 BuildRequires:  itext
 BuildRequires:  libswt3-gtk2
 %if %{gcj_support}
