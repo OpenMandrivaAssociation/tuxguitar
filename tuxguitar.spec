@@ -34,6 +34,7 @@ BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
 Provides:       %{rname} = %{epoch}:%{version}-%{release}
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 TuxGuitar is a multitrack guitar tablature editor and player written
