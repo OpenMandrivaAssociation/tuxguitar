@@ -22,12 +22,14 @@ Requires:       java
 Requires:       jpackage-utils
 Requires:       itext
 Requires:       libswt3-gtk2
+BuildRequires:  alsa-lib-devel
 BuildRequires:  ant
 BuildRequires:  desktop-file-utils
 # FIXME: (walluck): This doesn't seem to produce the correct output
 %if 0
 BuildRequires:  docbook-to-man
 %endif
+BuildRequires:  fluidsynth-devel
 BuildRequires:  java-rpmbuild
 BuildRequires:  itext
 BuildRequires:  libswt3-gtk2
