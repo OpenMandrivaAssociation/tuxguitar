@@ -1,19 +1,20 @@
 %define rname           TuxGuitar
 %define section         free
 %define gcj_support     1
+%define javac_target    1.5
 
 Name:           tuxguitar
-Version:        0.9.1
-Release:        %mkrel 12
+Version:        1.0
+Release:        %mkrel 0.0.1
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
 Group:          Development/Java
-URL:            http://www.herac.com.ar/tuxguitar.html
-Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/TuxGuitar-%{version}-src.tar.gz
+URL:            http://www.tuxguitar.com.ar/
+Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/tuxguitar-src-%{version}.tar.gz
 Source1:        %{name}-script
 Source2:        %{name}.desktop
-Source3:        %{name}.applications
+Source3:        %{name}-build.properties
 Requires:       aoss
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
@@ -23,7 +24,10 @@ Requires:       itext
 Requires:       libswt3-gtk2
 BuildRequires:  ant
 BuildRequires:  desktop-file-utils
-BuildRequires:  java-devel-icedtea
+# FIXME: (walluck): This doesn't seem to produce the correct output
+%if 0
+BuildRequires:  docbook-to-man
+%endif
 BuildRequires:  java-rpmbuild
 BuildRequires:  itext
 BuildRequires:  libswt3-gtk2
@@ -62,31 +66,71 @@ Group:          Development/Java
 Javadoc for %{name}.
 
 %prep
-%setup -q -n %{rname}-%{version}-src
-%{__perl} -pi -e 's|<javac|<javac nowarn="true"|g' build.xml
-%{__perl} -pi -e 's|<attribute name="Class-Path".*||g' build.xml
+%setup -q -n %{name}-src-%{version}
+# All of this is to fix the JNI location
+%{__cp} -a %{SOURCE3} TuxGuitar/build.properties
+%{__perl} -pi -e 's|^lib.swt.jni=.*|lib.swt.jni=%{_libdir}|' TuxGuitar/build.properties
+%{__perl} -pi -e 's|-Dbuild\.jni\.library\.dir=.*|-Dbuild.jni.library.dir=%{_libdir}|' Makefile
+%{__perl} -pi -e 's|/usr/lib/jni|%{_libdir}|' TuxGuitar/xml/build-mac.xml TuxGuitar/xml/build-linux.xml TuxGuitar/xml/build-ubuntu.xml
 
 %build
 export CLASSPATH=
 export OPT_JAR_LIST=:
-export JAVA_HOME=%{_jvmdir}/java-icedtea
-ant \
-  -Dbuild.manifest.classpath= \
-  -Dlib.swt.jni=%{_libdir} \
-  -Dlib.swt.jar=$(build-classpath swt-gtk) \
-  -Dlib.itext.jar=$(build-classpath itext)
+%{__make} \
+  JNI_OS=linux \
+  JAVA_HOME=%{java_home} \
+  JAVA_VERS=%{javac_target} \
+  ITEXT_JAR=$(build-classpath itext) \
+  SWT_JAR=$(build-classpath swt-gtk) \
 
-%{__mkdir_p} api
-pushd src
-%{javadoc} -d ../api `find . -type f -name "*.java"`
+for pkg in TuxGuitar TuxGuitar-CoreAudio TuxGuitar-alsa TuxGuitar-ascii TuxGuitar-ftp TuxGuitar-compat TuxGuitar-converter TuxGuitar-fluidsynth TuxGuitar-gtp TuxGuitar-jsa TuxGuitar-lilypond TuxGuitar-midi TuxGuitar-musicxml TuxGuitar-oss TuxGuitar-pdf TuxGuitar-ptb TuxGuitar-tef TuxGuitar-tray TuxGuitar-winmm; do
+    if [ ! -d ${pkg}/src ]; then
+        echo "Skipping ${pkg}"
+        continue
+    fi
+
+    %{__mkdir_p} api/${pkg}
+
+    pushd ${pkg}/src
+        %{javadoc} -quiet -d ../../api/${pkg} `find . -type f -name "*.java"` || echo "Building javadocs for ${pkg} failed"
+    popd
+done
+
+%if 0
+pushd misc
+%{__rm} tuxguitar.1
+%{_bindir}/docbook-to-man tuxguitar.sgml > tuxguitar.1
 popd
+%endif
 
 %install
 %{__rm} -rf %{buildroot}
 
+export DESTDIR=%{buildroot}
+
+%{__make} \
+PREFIX=${DESTDIR}%{_prefix} \
+INSTALL_BIN_DIR=${DESTDIR}%{_bindir} \
+INSTALL_LIB_DIR=${DESTDIR}%{_libdir} \
+INSTALL_DOC_DIR=${DESTDIR}%{_docdir}/%{name} \
+INSTALL_SHARE_DIR=${DESTDIR}%{_datadir}/%{name} \
+INSTALL_JAR_DIR=${DESTDIR}%{_javadir} \
+install install-linux
+
 %{__mkdir_p} %{buildroot}%{_javadir}
-%{__cp} -a TuxGuitar.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
+%{__mv} %{buildroot}%{_javadir}/tuxguitar.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
 (cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} ${jar/-%{version}/}; done)
+
+(cd %{buildroot}%{_datadir}/%{name} && %{__ln_s} %{buildroot}%{_javadir}/%{name}.jar tuxguitar.jar)
+
+%{__mkdir_p} %{buildroot}%{_datadir}/tuxguitar/plugins
+for plugin in `find . -type f -name 'tuxguitar-*.jar'`; do
+    %{__cp} -a ${plugin} %{buildroot}%{_datadir}/tuxguitar/plugins
+done
+
+%{__mkdir_p} %{buildroot}%{_javadocdir}/%{name}-%{version}
+%{__cp} -a api/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+%{__ln_s} %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
 %{__mkdir_p} %{buildroot}%{_bindir}
 %{__perl} -pe \
@@ -95,31 +139,25 @@ popd
   %{SOURCE1} > %{buildroot}%{_bindir}/%{name}
 %{__chmod} 755 %{buildroot}%{_bindir}/%{name}
 
-%{__mkdir_p} %{buildroot}%{_datadir}/%{name}
-(cd share && %{__cp} -a files lang %{buildroot}%{_datadir}/%{name})
-
-%{__mkdir_p} %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__cp} -a api/* %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__ln_s} %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
-
 %{__mkdir_p} %{buildroot}%{_datadir}/pixmaps
 %{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/16x16/apps
 %{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/32x32/apps
 %{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/64x64/apps
-%{__install} -m 644 share/files/icon-32x32.png %{buildroot}%{_datadir}/pixmaps/%{name}.png
-%{__install} -m 644 share/files/icon-16x16.png %{buildroot}%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
-%{__install} -m 644 share/files/icon-32x32.png %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
-%{__install} -m 644 share/files/icon-64x64.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-32x32.png %{buildroot}%{_datadir}/pixmaps/%{name}.png
+%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-16x16.png %{buildroot}%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
+%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-32x32.png %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-64x64.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
 
 %{__mkdir_p} %{buildroot}%{_datadir}/applications
-%{_bindir}/desktop-file-install --vendor mandriva               \
+%{_bindir}/desktop-file-install --vendor ""                     \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --remove-category Application                           \
-        --add-category X-MandrivaLinux-Multimedia-Sound         \
         %{SOURCE2}
 
 %{__mkdir_p} %{buildroot}%{_datadir}/application-registry
-%{__install} -m 644 %{SOURCE3} %{buildroot}%{_datadir}/application-registry
+%{__install} -p -m 0644 misc/tuxguitar.xml %{buildroot}%{_datadir}/application-registry/%{name}.applications
+
+%{__mkdir_p} %{buildroot}%{_mandir}/man1
+%{__cp} -a misc/tuxguitar.1 %{buildroot}%{_mandir}/man1/%{name}.1
 
 %if %{gcj_support}
 %{_bindir}/aot-compile-rpm
@@ -132,30 +170,25 @@ popd
 %if %{gcj_support}
 %{update_gcjdb}
 %endif
+%if %mdkversion < 200900
 %{update_desktop_database}
 %{update_mime_database}
 %update_icon_cache hicolor
+%endif
 
 %postun
 %if %{gcj_support}
 %{clean_gcjdb}
 %endif
+%if %mdkversion < 200900
 %{clean_desktop_database}
 %{clean_mime_database}
 %clean_icon_cache hicolor
-
-%post javadoc
-%{__rm} -f %{_javadocdir}/%{name}
-%{__ln_s} %{name}-%{version} %{_javadocdir}/%{name}
-
-%postun javadoc
-if [ $1 -eq 0 ]; then
-  %{__rm} -f %{_javadocdir}/%{name}
-fi
+%endif
 
 %files
 %defattr(0644,root,root,0755)
-%doc doc/*
+%doc AUTHORS ChangeLog COPYING LICENSE README
 %attr(0755,root,root) %{_bindir}/%{name}
 %{_javadir}/*.jar
 %if %{gcj_support}
@@ -169,8 +202,10 @@ fi
 %{_datadir}/icons/hicolor/16x16/apps/%{name}.png
 %{_datadir}/icons/hicolor/32x32/apps/%{name}.png
 %{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+%{_libdir}/*.so
+%{_mandir}/man1/%{name}.1*
 
 %files javadoc
 %defattr(0644,root,root,0755)
-%doc %{_javadocdir}/%{name}-%{version}
-%ghost %doc %{_javadocdir}/%{name}
+%{_javadocdir}/%{name}-%{version}
+%{_javadocdir}/%{name}
