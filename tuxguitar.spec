@@ -5,7 +5,7 @@
 
 Name:           tuxguitar
 Version:        1.0
-Release:        %mkrel 0.0.1
+Release:        %mkrel 0.0.2
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -18,10 +18,10 @@ Source3:        %{name}-build.properties
 Requires:       aoss
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
+Requires:       eclipse-swt
 Requires:       java
 Requires:       jpackage-utils
 Requires:       itext
-Requires:       libswt3-gtk2
 BuildRequires:  alsa-lib-devel
 BuildRequires:  ant
 BuildRequires:  desktop-file-utils
@@ -29,10 +29,10 @@ BuildRequires:  desktop-file-utils
 %if 0
 BuildRequires:  docbook-to-man
 %endif
+BuildRequires:  eclipse-swt
 BuildRequires:  fluidsynth-devel
 BuildRequires:  java-rpmbuild
 BuildRequires:  itext
-BuildRequires:  libswt3-gtk2
 %if %{gcj_support}
 BuildRequires:  java-gcj-compat-devel
 %else
@@ -71,9 +71,9 @@ Javadoc for %{name}.
 %setup -q -n %{name}-src-%{version}
 # All of this is to fix the JNI location
 %{__cp} -a %{SOURCE3} TuxGuitar/build.properties
-%{__perl} -pi -e 's|^lib.swt.jni=.*|lib.swt.jni=%{_libdir}|' TuxGuitar/build.properties
-%{__perl} -pi -e 's|-Dbuild\.jni\.library\.dir=.*|-Dbuild.jni.library.dir=%{_libdir}|' Makefile
-%{__perl} -pi -e 's|/usr/lib/jni|%{_libdir}|' TuxGuitar/xml/build-mac.xml TuxGuitar/xml/build-linux.xml TuxGuitar/xml/build-ubuntu.xml
+%{__perl} -pi -e 's|^lib.swt.jni=.*|lib.swt.jni=%{_libdir}/eclipse|' TuxGuitar/build.properties
+%{__perl} -pi -e 's|-Dbuild\.jni\.library\.dir=.*|-Dbuild.jni.library.dir=%{_libdir}/eclipse|' Makefile
+%{__perl} -pi -e 's|/usr/lib/jni|%{_libdir}/eclipse|' TuxGuitar/xml/build-mac.xml TuxGuitar/xml/build-linux.xml TuxGuitar/xml/build-ubuntu.xml
 
 %build
 export CLASSPATH=
@@ -83,7 +83,7 @@ export OPT_JAR_LIST=:
   JAVA_HOME=%{java_home} \
   JAVA_VERS=%{javac_target} \
   ITEXT_JAR=$(build-classpath itext) \
-  SWT_JAR=$(build-classpath swt-gtk) \
+  SWT_JAR=$(build-classpath swt) \
 
 for pkg in TuxGuitar TuxGuitar-CoreAudio TuxGuitar-alsa TuxGuitar-ascii TuxGuitar-ftp TuxGuitar-compat TuxGuitar-converter TuxGuitar-fluidsynth TuxGuitar-gtp TuxGuitar-jsa TuxGuitar-lilypond TuxGuitar-midi TuxGuitar-musicxml TuxGuitar-oss TuxGuitar-pdf TuxGuitar-ptb TuxGuitar-tef TuxGuitar-tray TuxGuitar-winmm; do
     if [ ! -d ${pkg}/src ]; then
