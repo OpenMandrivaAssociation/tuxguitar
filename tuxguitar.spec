@@ -5,7 +5,7 @@
 
 Name:           tuxguitar
 Version:        1.0
-Release:        %mkrel 0.0.2
+Release:        %mkrel 0.0.3
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
@@ -40,6 +40,8 @@ BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
 Provides:       %{rname} = %{epoch}:%{version}-%{release}
+Provides:       %{name}-alsa = %{epoch}:%{version}-%{release}
+Obsoletes:      %{name}-alsa < %{epoch}:%{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
