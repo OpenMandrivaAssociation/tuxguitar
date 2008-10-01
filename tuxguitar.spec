@@ -5,7 +5,7 @@
 
 Name:           tuxguitar
 Version:        1.0
-Release:        %mkrel 0.0.3
+Release:        %mkrel 0.0.4
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
