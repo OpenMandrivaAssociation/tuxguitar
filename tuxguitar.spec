@@ -5,11 +5,11 @@
 
 Name:           tuxguitar
 Version:        1.0
-Release:        %mkrel 0.0.4
+Release:        %mkrel 0.0.5
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPL
-Group:          Development/Java
+Group:          Sound
 URL:            http://www.tuxguitar.com.ar/
 Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/tuxguitar-src-%{version}.tar.gz
 Source1:        %{name}-script
