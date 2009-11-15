@@ -4,7 +4,7 @@
 %define javac_target    1.5
 
 Name:           tuxguitar
-Version:        1.1
+Version:        1.2
 Release:        %mkrel 1
 Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
