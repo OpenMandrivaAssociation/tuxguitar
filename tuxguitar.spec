@@ -1,47 +1,54 @@
 %define rname           TuxGuitar
-%define section         free
 %define gcj_support     1
-%define javac_target    1.5
+
+# For a hack to fix internal help browser to work.
+# (Set correct path to MOZILLA_FIVE_HOME on runtime).
+%define	mozappdir	%(rpm -q --queryformat='%%{name}-%%{version}' xulrunner)
 
 Name:           tuxguitar
 Version:        1.2
 Release:        %mkrel 1
-Epoch:          0
 Summary:        Multitrack guitar tablature editor and player
-License:        LGPL
+License:        LGPLv2+
 Group:          Sound
 URL:            http://www.tuxguitar.com.ar/
-Source0:        http://download.sourceforge.net/sourceforge/tuxguitar/tuxguitar-src-%{version}.tar.gz
-Source1:        %{name}-script
-Source2:        %{name}.desktop
-Source3:        %{name}-build.properties
-Requires:       aoss
-Requires(post): desktop-file-utils
-Requires(postun): desktop-file-utils
-Requires:       eclipse-swt
-Requires:       java
-Requires:       jpackage-utils
-Requires:       itext
-BuildRequires:  alsa-lib-devel
-BuildRequires:  ant
-BuildRequires:  desktop-file-utils
-# FIXME: (walluck): This doesn't seem to produce the correct output
-%if 0
-BuildRequires:  docbook-to-man
-%endif
-BuildRequires:  eclipse-swt
-BuildRequires:  fluidsynth-devel
-BuildRequires:  java-rpmbuild
-BuildRequires:  itext
+Source0:	http://downloads.sourceforge.net/%{name}/%{name}-src-%{version}.tar.gz
+# Use Fedora specific build script from upstream svn.
+# http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/xml/build-fedora.xml
+Source1:	%{name}-build-fedora.xml
+# From upstream trunk, to disable certain plugins by default
+# http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/src/org/herac/tuxguitar/gui/system/plugins/TGPluginProperties.java?r1=99&r2=770
+Patch0:		%{name}-plugin-properties.patch
+
+BuildRequires:	alsa-lib-devel
+BuildRequires:	ant
+BuildRequires:	ant-contrib
+BuildRequires:	ant-nodeps
+BuildRequires:	itext
+BuildRequires:	desktop-file-utils
+BuildRequires:	fluidsynth-devel
+BuildRequires:	jackit-devel
+BuildRequires:	java-devel-openjdk
+BuildRequires:	java-rpmbuild
+BuildRequires:	jpackage-utils
+BuildRequires:	eclipse-swt
+
 %if %{gcj_support}
-BuildRequires:  java-gcj-compat-devel
+BuildRequires:	java-gcj-compat-devel
+Requires(post):	java-gcj-compat
+Requires(postun):	java-gcj-compat
 %else
-BuildRequires:  java-devel
-BuildArch:      noarch
+BuildArch:	noarch
 %endif
-Provides:       %{rname} = %{epoch}:%{version}-%{release}
-Provides:       %{name}-alsa = %{epoch}:%{version}-%{release}
-Obsoletes:      %{name}-alsa < %{epoch}:%{version}-%{release}
+
+Requires:       eclipse-swt
+Requires:       java >= 1.5
+Requires:	jpackage-utils
+Requires:       itext
+
+Provides:       %{rname} = %{version}-%{release}
+Provides:       %{name}-alsa = %{version}-%{release}
+Obsoletes:      %{name}-alsa < %{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
@@ -52,6 +59,7 @@ With TuxGuitar, you will be able to compose music using the
 following features:
 
     * Tablature editor
+    * Score Viewer
     * Multitrack display
     * Autoscroll while playing
     * Note duration management
@@ -60,108 +68,90 @@ following features:
     * Repeat open and close
     * Time signature management
     * Tempo management
-    * Imports and exports gp3 and gp4 files
-
-%package javadoc
-Summary:        Javadoc for %{name}
-Group:          Development/Java
-
-%description javadoc
-Javadoc for %{name}.
+    * Imports and exports gp3, gp4 and gp5 files
 
 %prep
 %setup -q -n %{name}-src-%{version}
-# All of this is to fix the JNI location
-%{__cp} -a %{SOURCE3} TuxGuitar/build.properties
-%{__perl} -pi -e 's|^lib.swt.jni=.*|lib.swt.jni=%{_libdir}/eclipse|' TuxGuitar/build.properties
-%{__perl} -pi -e 's|-Dbuild\.jni\.library\.dir=.*|-Dbuild.jni.library.dir=%{_libdir}/eclipse|' Makefile
-%{__perl} -pi -e 's|/usr/lib/jni|%{_libdir}/eclipse|' TuxGuitar/xml/build-mac.xml TuxGuitar/xml/build-linux.xml TuxGuitar/xml/build-ubuntu.xml
+%patch0 -p1
+
+cp %{SOURCE1} TuxGuitar/xml/build-fedora.xml
+
+# Set debug="true" on javac part of the build scripts.
+for file in $(find . -name build.xml); do
+   sed -i 's|debug="false"|debug="true"|' $file
+done
+
+# Bump Java requires to 1.5
+for file in $(find . -name build.properties); do
+   sed -i 's|1.4|1.5|g' $file
+done
+
+# Use a hack to set correct path to MOZILLA_FIVE_HOME on runtime.
+# Fixes internal help browser not working.
+sed -i 's,firefox,%{mozappdir},' TuxGuitar/xml/build-fedora.xml
 
 %build
-export CLASSPATH=
-export OPT_JAR_LIST=:
-%{__make} \
-  JNI_OS=linux \
-  JAVA_HOME=%{java_home} \
-  JAVA_VERS=%{javac_target} \
-  ITEXT_JAR=$(build-classpath itext) \
-  SWT_JAR=$(build-classpath swt) \
+# Plugins to build:
+PLUGINS="alsa ascii browser-ftp community compat converter fluidsynth gervill\
+         gtp jack jsa lilypond midi musicxml oss pdf ptb tef tray"
 
-for pkg in TuxGuitar TuxGuitar-CoreAudio TuxGuitar-alsa TuxGuitar-ascii TuxGuitar-ftp TuxGuitar-compat TuxGuitar-converter TuxGuitar-fluidsynth TuxGuitar-gtp TuxGuitar-jsa TuxGuitar-lilypond TuxGuitar-midi TuxGuitar-musicxml TuxGuitar-oss TuxGuitar-pdf TuxGuitar-ptb TuxGuitar-tef TuxGuitar-tray TuxGuitar-winmm; do
-    if [ ! -d ${pkg}/src ]; then
-        echo "Skipping ${pkg}"
-        continue
-    fi
+# JNI's to build
+JNIS="alsa fluidsynth jack oss"
 
-    %{__mkdir_p} api/${pkg}
+LIBSUFFIX=$(echo %{_lib}|sed 's|lib||')
 
-    pushd ${pkg}/src
-        %{javadoc} -quiet -d ../../api/${pkg} `find . -type f -name "*.java"` || echo "Building javadocs for ${pkg} failed"
-    popd
+# to pass to ant:
+ANT_FLAGS=" \
+   -Dpath.tuxguitar=$PWD/TuxGuitar/%{name}.jar \
+   -Dpath.itext=%{_javadir}/itext.jar \
+   -Dpath.swt=%{_libdir}/eclipse/swt.jar \
+   -Dlib.swt.jar=%{_libdir}/eclipse/swt.jar \
+   -Ddist.lib.path=%{_libdir}/%{name}/ \
+   -Ddist.file=xml/build-fedora.xml \
+   -Ddist.jar.path=%{_datadir}/%{name}/ \
+   -Ddist.share.path=%{_datadir}/%{name}/ \
+   -Dos.lib.suffix=$LIBSUFFIX \
+   -Dos.data.dir=%{_datadir}/ \
+   -Ddist.default.style=Lavender \
+   -Ddist.default.song=%{_datadir}/%{name}/%{name}.tg"
+
+# build jars
+%{ant} -f TuxGuitar/build.xml -v -d $ANT_FLAGS all
+for jarname in $PLUGINS; do
+   %{ant} -f TuxGuitar-$jarname/build.xml -v -d $ANT_FLAGS \
+      -Dbuild.jar=../TuxGuitar/share/plugins/tuxguitar-$jarname.jar all
 done
 
-%if 0
-pushd misc
-%{__rm} tuxguitar.1
-%{_bindir}/docbook-to-man tuxguitar.sgml > tuxguitar.1
-popd
-%endif
+# build jnis
+for jni in $JNIS; do
+   %{make} -C TuxGuitar-$jni/jni CFLAGS="%{optflags} \
+              -I%{_jvmdir}/java-openjdk/include \
+              -I%{_jvmdir}/java-openjdk/include/linux \
+              -fPIC"
+done
 
 %install
-%{__rm} -rf %{buildroot}
+rm -rf %{buildroot}
 
-export DESTDIR=%{buildroot}
+# to pass to ant:
+ANT_FLAGS=" \
+   -Dpath.tuxguitar=$PWD/TuxGuitar/%{name}.jar \
+   -Ddist.file=xml/build-fedora.xml \
+   -Dos.bin.dir=%{_bindir} \
+   -Ddist.jar.path=%{_datadir}/%{name}/ \
+   -Ddist.share.path=%{_datadir}/%{name}/ \
+   -Dos.lib.suffix=$LIBSUFFIX \
+   -Dos.data.dir=%{_datadir}/ \
+   -Ddist.default.style=Lavender \
+   -Ddist.doc.path=%{_docdir}/%{name}-%{version}/ \
+   -Ddist.default.song=%{_datadir}/%{name}/%{name}.tg \
+   -Ddist.dst.path=%{buildroot}"
 
-%{__make} \
-PREFIX=${DESTDIR}%{_prefix} \
-INSTALL_BIN_DIR=${DESTDIR}%{_bindir} \
-INSTALL_LIB_DIR=${DESTDIR}%{_libdir} \
-INSTALL_DOC_DIR=${DESTDIR}%{_docdir}/%{name} \
-INSTALL_SHARE_DIR=${DESTDIR}%{_datadir}/%{name} \
-INSTALL_JAR_DIR=${DESTDIR}%{_javadir} \
-install install-linux
+%{ant} -f TuxGuitar/build.xml -v -d $ANT_FLAGS install
 
-%{__mkdir_p} %{buildroot}%{_javadir}
-%{__mv} %{buildroot}%{_javadir}/tuxguitar.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
-(cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} ${jar/-%{version}/}; done)
-
-(cd %{buildroot}%{_datadir}/%{name} && %{__ln_s} %{buildroot}%{_javadir}/%{name}.jar tuxguitar.jar)
-
-%{__mkdir_p} %{buildroot}%{_datadir}/tuxguitar/plugins
-for plugin in `find . -type f -name 'tuxguitar-*.jar'`; do
-    %{__cp} -a ${plugin} %{buildroot}%{_datadir}/tuxguitar/plugins
-done
-
-%{__mkdir_p} %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__cp} -a api/* %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__ln_s} %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
-
-%{__mkdir_p} %{buildroot}%{_bindir}
-%{__perl} -pe \
-  's|/usr/lib|%{_libdir}|g ;
-   s|/usr/share/tuxguitar|%{_datadir}/%{name}|g' \
-  %{SOURCE1} > %{buildroot}%{_bindir}/%{name}
-%{__chmod} 755 %{buildroot}%{_bindir}/%{name}
-
-%{__mkdir_p} %{buildroot}%{_datadir}/pixmaps
-%{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/16x16/apps
-%{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/32x32/apps
-%{__mkdir_p} %{buildroot}%{_datadir}/icons/hicolor/64x64/apps
-%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-32x32.png %{buildroot}%{_datadir}/pixmaps/%{name}.png
-%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-16x16.png %{buildroot}%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
-%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-32x32.png %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
-%{__install} -p -m 0644 TuxGuitar/share/skins/ersplus/icon-64x64.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
-
-%{__mkdir_p} %{buildroot}%{_datadir}/applications
-%{_bindir}/desktop-file-install --vendor ""                     \
-        --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        %{SOURCE2}
-
-%{__mkdir_p} %{buildroot}%{_datadir}/application-registry
-%{__install} -p -m 0644 misc/tuxguitar.xml %{buildroot}%{_datadir}/application-registry/%{name}.applications
-
-%{__mkdir_p} %{buildroot}%{_mandir}/man1
-%{__cp} -a misc/tuxguitar.1 %{buildroot}%{_mandir}/man1/%{name}.1
+# install jnis we built
+mkdir -p %{buildroot}%{_libdir}/%{name}
+cp -a TuxGuitar-*/jni/*.so %{buildroot}%{_libdir}/%{name}/
 
 %if %{gcj_support}
 %{_bindir}/aot-compile-rpm
@@ -170,46 +160,25 @@ done
 %clean
 %{__rm} -rf %{buildroot}
 
-%post
 %if %{gcj_support}
+%post
 %{update_gcjdb}
-%endif
-%if %mdkversion < 200900
-%{update_desktop_database}
-%{update_mime_database}
-%update_icon_cache hicolor
-%endif
 
 %postun
-%if %{gcj_support}
 %{clean_gcjdb}
-%endif
-%if %mdkversion < 200900
-%{clean_desktop_database}
-%{clean_mime_database}
-%clean_icon_cache hicolor
 %endif
 
 %files
-%defattr(0644,root,root,0755)
-%doc AUTHORS ChangeLog COPYING LICENSE README
-%attr(0755,root,root) %{_bindir}/%{name}
-%{_javadir}/*.jar
-%if %{gcj_support}
-%dir %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/*.jar.*
-%endif
+%defattr(-,root,root,-)
+%{_docdir}/%{name}-%{version}
+%{_libdir}/%{name}
+%{_bindir}/%{name}
 %{_datadir}/%{name}
-%{_datadir}/applications/*
-%{_datadir}/application-registry/*
-%{_datadir}/pixmaps/%{name}.png
-%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
-%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
-%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
-%{_libdir}/*.so
-%{_mandir}/man1/%{name}.1*
+%{_datadir}/applications/%{name}.desktop
+%{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/icons/hicolor/*/mimetypes/*.png
+%{_datadir}/mime/packages/%{name}.xml
 
-%files javadoc
-%defattr(0644,root,root,0755)
-%{_javadocdir}/%{name}-%{version}
-%{_javadocdir}/%{name}
+%if %{gcj_support}
+%{_libdir}/gcj/%{name}
+%endif
