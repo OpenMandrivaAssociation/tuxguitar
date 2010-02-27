@@ -7,7 +7,7 @@
 
 Name:           tuxguitar
 Version:        1.2
-Release:        %mkrel 2
+Release:        %mkrel 3
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
@@ -48,7 +48,9 @@ Requires:       itext
 
 Provides:       %{rname} = %{version}-%{release}
 Provides:       %{name}-alsa = %{version}-%{release}
+Provides:       %{name}-javadoc = %{version}-%{release}
 Obsoletes:      %{name}-alsa < %{version}-%{release}
+Obsoletes:      %{name}-javadoc < %{version}-%{release}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
