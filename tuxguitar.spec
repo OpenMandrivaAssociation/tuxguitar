@@ -7,7 +7,7 @@
 
 Name:           tuxguitar
 Version:        1.2
-Release:        %mkrel 1
+Release:        %mkrel 2
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
@@ -42,7 +42,7 @@ BuildArch:	noarch
 %endif
 
 Requires:       eclipse-swt
-Requires:       java >= 1.5
+Requires:       java >= 1.6
 Requires:	jpackage-utils
 Requires:       itext
 
