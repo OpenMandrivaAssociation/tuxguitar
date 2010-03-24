@@ -1,13 +1,9 @@
 %define rname           TuxGuitar
 %define gcj_support     1
 
-# For a hack to fix internal help browser to work.
-# (Set correct path to MOZILLA_FIVE_HOME on runtime).
-%define	mozappdir	%(rpm -q --queryformat='%%{name}-%%{version}' xulrunner)
-
 Name:           tuxguitar
 Version:        1.2
-Release:        %mkrel 3
+Release:        %mkrel 4
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
@@ -90,7 +86,7 @@ done
 
 # Use a hack to set correct path to MOZILLA_FIVE_HOME on runtime.
 # Fixes internal help browser not working.
-sed -i 's,firefox,%{mozappdir},' TuxGuitar/xml/build-fedora.xml
+sed -i 's,firefox,`rpm -q --queryformat '%{NAME}-%{VERSION}' xulrunner`,' TuxGuitar/xml/build-fedora.xml
 
 %build
 # Plugins to build:
