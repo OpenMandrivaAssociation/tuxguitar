@@ -1,9 +1,8 @@
 %define rname           TuxGuitar
-%define gcj_support     1
 
 Name:           tuxguitar
 Version:        1.2
-Release:        %mkrel 5
+Release:        %mkrel 6
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
@@ -15,7 +14,7 @@ Source1:	%{name}-build-fedora.xml
 # From upstream trunk, to disable certain plugins by default
 # http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/src/org/herac/tuxguitar/gui/system/plugins/TGPluginProperties.java?r1=99&r2=770
 Patch0:		%{name}-plugin-properties.patch
-
+BuildArch:	noarch
 BuildRequires:	alsa-lib-devel
 BuildRequires:	ant
 BuildRequires:	ant-contrib
@@ -28,14 +27,6 @@ BuildRequires:	java-devel-openjdk
 BuildRequires:	java-rpmbuild
 BuildRequires:	jpackage-utils
 BuildRequires:	eclipse-swt
-
-%if %{gcj_support}
-BuildRequires:	java-gcj-compat-devel
-Requires(post):	java-gcj-compat
-Requires(postun):	java-gcj-compat
-%else
-BuildArch:	noarch
-%endif
 
 Requires:       eclipse-swt
 Requires:       java >= 1.6
@@ -151,20 +142,8 @@ ANT_FLAGS=" \
 mkdir -p %{buildroot}%{_libdir}/%{name}
 cp -a TuxGuitar-*/jni/*.so %{buildroot}%{_libdir}/%{name}/
 
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
-%endif
-
 %clean
 %{__rm} -rf %{buildroot}
-
-%if %{gcj_support}
-%post
-%{update_gcjdb}
-
-%postun
-%{clean_gcjdb}
-%endif
 
 %files
 %defattr(-,root,root,-)
@@ -176,7 +155,3 @@ cp -a TuxGuitar-*/jni/*.so %{buildroot}%{_libdir}/%{name}/
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %{_datadir}/icons/hicolor/*/mimetypes/*.png
 %{_datadir}/mime/packages/%{name}.xml
-
-%if %{gcj_support}
-%{_libdir}/gcj/%{name}
-%endif
