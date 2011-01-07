@@ -14,7 +14,7 @@ Source1:	%{name}-build-fedora.xml
 # From upstream trunk, to disable certain plugins by default
 # http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/src/org/herac/tuxguitar/gui/system/plugins/TGPluginProperties.java?r1=99&r2=770
 Patch0:		%{name}-plugin-properties.patch
-BuildArch:	noarch
+
 BuildRequires:	alsa-lib-devel
 BuildRequires:	ant
 BuildRequires:	ant-contrib
