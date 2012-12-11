@@ -15,14 +15,14 @@ Source1:	%{name}-build-fedora.xml
 # http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/src/org/herac/tuxguitar/gui/system/plugins/TGPluginProperties.java?r1=99&r2=770
 Patch0:		%{name}-plugin-properties.patch
 
-BuildRequires:	alsa-lib-devel
+BuildRequires:	alsa-oss-devel
 BuildRequires:	ant
 BuildRequires:	ant-contrib
 BuildRequires:	ant-nodeps
 BuildRequires:	itext
 BuildRequires:	desktop-file-utils
-BuildRequires:	fluidsynth-devel
-BuildRequires:	jackit-devel
+BuildRequires:	pkgconfig(fluidsynth)
+BuildRequires:	pkgconfig(jack)
 BuildRequires:	java-devel-openjdk
 BuildRequires:	java-rpmbuild
 BuildRequires:	jpackage-utils
@@ -38,7 +38,6 @@ Provides:       %{name}-alsa = %{version}-%{release}
 Provides:       %{name}-javadoc = %{version}-%{release}
 Obsoletes:      %{name}-alsa < %{version}-%{release}
 Obsoletes:      %{name}-javadoc < %{version}-%{release}
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 TuxGuitar is a multitrack guitar tablature editor and player written
@@ -142,11 +141,7 @@ ANT_FLAGS=" \
 mkdir -p %{buildroot}%{_libdir}/%{name}
 cp -a TuxGuitar-*/jni/*.so %{buildroot}%{_libdir}/%{name}/
 
-%clean
-%{__rm} -rf %{buildroot}
-
 %files
-%defattr(-,root,root,-)
 %{_docdir}/%{name}-%{version}
 %{_libdir}/%{name}
 %{_bindir}/%{name}
