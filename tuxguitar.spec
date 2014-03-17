@@ -2,7 +2,7 @@
 
 Name:           tuxguitar
 Version:        1.2
-Release:        %mkrel 7
+Release:        8
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
@@ -18,7 +18,6 @@ Patch0:		%{name}-plugin-properties.patch
 BuildRequires:	alsa-oss-devel
 BuildRequires:	ant
 BuildRequires:	ant-contrib
-BuildRequires:	ant-nodeps
 BuildRequires:	itext
 BuildRequires:	desktop-file-utils
 BuildRequires:	pkgconfig(fluidsynth)
