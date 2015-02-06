@@ -2,7 +2,7 @@
 
 Name:           tuxguitar
 Version:        1.2
-Release:        8
+Release:        9
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
