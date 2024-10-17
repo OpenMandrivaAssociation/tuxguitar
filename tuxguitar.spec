@@ -6,7 +6,7 @@ Release:        9
 Summary:        Multitrack guitar tablature editor and player
 License:        LGPLv2+
 Group:          Sound
-URL:            http://www.tuxguitar.com.ar/
+URL:            https://www.tuxguitar.com.ar/
 Source0:	http://downloads.sourceforge.net/%{name}/%{name}-src-%{version}.tar.gz
 # Use Fedora specific build script from upstream svn.
 # http://tuxguitar.svn.sourceforge.net/viewvc/tuxguitar/trunk/TuxGuitar/xml/build-fedora.xml
